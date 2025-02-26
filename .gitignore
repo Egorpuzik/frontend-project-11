@@ -1,0 +1,14 @@
+# Node.js зависимости
+node_modules/
+package-lock.json
+
+# Webpack сборка
+dist/
+
+# Конфиги окружения
+.env
+.DS_Store
+
+# Кэш и временные файлы
+.cache/
+coverage/
