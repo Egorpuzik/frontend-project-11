@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "bootstrap": "^5.3.3",
+    "on-change": "^5.0.1",
     "react-hook-form": "^7.54.2",
     "yup": "^1.6.1"
   },
