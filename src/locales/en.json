@@ -1,0 +1,27 @@
+{
+    "modal": {
+      "fullArticle": "Read full article",
+      "close": "Close"
+    },
+    "header": {
+      "title": "RSS Aggregator",
+      "subtitle": "Start reading RSS today! It's easy, it's beautiful."
+    },
+    "form": {
+      "label": "RSS link",
+      "submit": "Add",
+      "placeholder": "RSS link",
+      "example": "Example: https://lorem-rss.hexlet.app/feed",
+      "feedback": {
+        "success": "RSS successfully loaded",
+        "invalidUrl": "The link must be a valid URL",
+        "alreadyExists": "RSS feed already exists",
+        "networkError": "Network error",
+        "noRss": "The resource does not contain a valid RSS feed"
+      }
+    },
+    "posts": "Posts",
+    "feeds": "Feeds",
+    "footer": "created by"
+  }
+  
