@@ -6,12 +6,13 @@
   "scripts": {
     "start": "webpack serve --mode development --open",
     "build": "webpack --mode production",
-    "test": "jest"  
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^1.8.1",
     "bootstrap": "^5.3.3",
     "i18next": "^24.2.2",
     "i18next-browser-languagedetector": "^8.0.4",
@@ -31,4 +32,3 @@
     "webpack-dev-server": "^5.2.0"
   }
 }
-

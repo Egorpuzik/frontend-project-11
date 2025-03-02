@@ -1,10 +1,12 @@
 import { validateUrl } from './validation.js';
 import { initView } from './view.js';
+import { fetchRSS, parseRSS } from './api/rssParser.js';
 
 export default () => {
   const state = {
     form: { error: null },
     feeds: [],
+    posts: [],
   };
 
   const elements = {
@@ -20,8 +22,16 @@ export default () => {
     const url = elements.input.value.trim();
 
     validateUrl(url, state.feeds)
-      .then(() => {
-        state.feeds.push(url);
+      .then(() => fetchRSS(url))
+      .then((xmlDoc) => {
+        const feed = {
+          title: xmlDoc.querySelector('title')?.textContent || 'Без названия',
+          link: url,
+        };
+        const posts = parseRSS(xmlDoc);
+
+        state.feeds.push(feed);
+        state.posts.push(...posts);
         watchedState.form.error = null;
         elements.input.value = '';
         elements.input.focus();
