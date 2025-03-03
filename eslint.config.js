@@ -6,23 +6,34 @@ export default defineConfig({
   languageOptions: {
     parser: babelParser, // Используем Babel для парсинга
     parserOptions: {
-      requireConfigFile: false,
-      ecmaVersion: 'latest',
-      sourceType: 'module',
-      plugins: ['jsx'], // Плагин для JSX
+      requireConfigFile: false, // Не требует конфигурационный файл Babel
+      ecmaVersion: 'latest',    // Используем последние возможности ECMAScript
+      sourceType: 'module',     // Для работы с модулями ES6
+      ecmaFeatures: {
+        jsx: true,              // Включаем поддержку JSX
+      },
     },
   },
   plugins: {
-    react: reactPlugin,
+    react: reactPlugin,         // Подключаем плагин для React
   },
   rules: {
-    'react/prop-types': 'off', // Пример отключения правила
+    'react/prop-types': 'off',  // Пример отключения правила (если не используете prop-types)
     // Добавьте другие правила по необходимости
   },
   settings: {
     react: {
-      version: 'detect',
+      version: 'detect',        // Автоматически определяет версию React
     },
   },
+  // Прямое расширение конфигураций
+  overrides: [
+    {
+      files: ['*.js', '*.jsx'], // Применяем для всех файлов JS и JSX
+      rules: {
+        'react/prop-types': 'off',
+      },
+    },
+  ],
 });
 
