@@ -1,0 +1,75 @@
+/* Стили для модального окна */
+.modal-content {
+    border-radius: 0.5rem;
+    border: 2px solid #dee2e6;
+    background-color: #f8f9fa;
+  }
+  
+  .modal-header {
+    background-color: #007bff;
+    color: #fff;
+    border-bottom: 2px solid #dee2e6;
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+  }
+  
+  .modal-title {
+    font-size: 1.5rem;
+  }
+  
+  .modal-body {
+    font-size: 1rem;
+    padding: 1rem;
+    color: #495057;
+  }
+  
+  .modal-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+  }
+  
+  .modal-footer .btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+  }
+  
+  .modal-footer .btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+  }
+  
+  /* Стили для кнопки предпросмотра */
+  .preview-btn {
+    background: none;
+    border: none;
+    color: #007bff;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  
+  .preview-btn:hover {
+    text-decoration: none;
+    color: #0056b3;
+  }
+  
+  /* Стили для прочитанных и непрочитанных постов */
+  .fw-bold {
+    font-weight: bold;
+    color: #007bff;
+  }
+  
+  .fw-normal {
+    font-weight: normal;
+    color: #495057;
+  }
+  
+  .fw-normal a {
+    color: inherit;
+    text-decoration: none;
+  }
+  
+  .fw-normal a:hover {
+    text-decoration: underline;
+    color: #0056b3;
+  }
+  
