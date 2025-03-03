@@ -1,16 +1,14 @@
-// tests/app.test.js
-
 import { test, expect } from '@playwright/test';
 
 test('должен показывать корректный текст на главной странице', async ({ page }) => {
-  await page.goto('http://localhost:3000');
+  await page.goto('http://localhost:8086/'); 
 
   const rssMessage = await page.locator('text=RSS успешно загружен');
   await expect(rssMessage).toBeVisible();
 });
 
 test('должен показывать ошибку при неправильном URL', async ({ page }) => {
-  await page.goto('http://localhost:3000');
+  await page.goto('http://localhost:8086/'); 
   await page.fill('input[type="url"]', 'invalid-url');
   await page.click('button[type="submit"]');
 
@@ -19,10 +17,11 @@ test('должен показывать ошибку при неправильн
 });
 
 test('должен показывать сообщение о сети при проблемах с подключением', async ({ page }) => {
-  await page.goto('http://localhost:3000');
+  await page.goto('http://localhost:8086/'); 
 
   await page.route('**/*', (route) => route.abort());
 
   const networkErrorMessage = await page.locator('text=Ошибка сети');
   await expect(networkErrorMessage).toBeVisible();
 });
+
