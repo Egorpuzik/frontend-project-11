@@ -3,73 +3,98 @@
     border-radius: 0.5rem;
     border: 2px solid #dee2e6;
     background-color: #f8f9fa;
-  }
-  
-  .modal-header {
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease-in-out;
+}
+
+.modal-content:hover {
+    transform: scale(1.02);
+}
+
+.modal-header {
     background-color: #007bff;
     color: #fff;
     border-bottom: 2px solid #dee2e6;
     border-top-left-radius: 0.5rem;
     border-top-right-radius: 0.5rem;
-  }
-  
-  .modal-title {
+}
+
+.modal-title {
     font-size: 1.5rem;
-  }
-  
-  .modal-body {
+}
+
+.modal-body {
     font-size: 1rem;
     padding: 1rem;
     color: #495057;
-  }
-  
-  .modal-footer {
+}
+
+.modal-footer {
     background-color: #f8f9fa;
     border-top: 1px solid #dee2e6;
-  }
-  
-  .modal-footer .btn-primary {
+}
+
+.modal-footer .btn-primary {
     background-color: #007bff;
     border-color: #007bff;
-  }
-  
-  .modal-footer .btn-secondary {
+    transition: background-color 0.3s ease;
+}
+
+.modal-footer .btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #004085;
+}
+
+.modal-footer .btn-secondary {
     background-color: #6c757d;
     border-color: #6c757d;
-  }
-  
-  /* Стили для кнопки предпросмотра */
-  .preview-btn {
+    transition: background-color 0.3s ease;
+}
+
+.modal-footer .btn-secondary:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
+}
+
+/* Стили для кнопки предпросмотра */
+.preview-btn {
     background: none;
     border: none;
     color: #007bff;
     text-decoration: underline;
     cursor: pointer;
-  }
-  
-  .preview-btn:hover {
+    transition: color 0.3s ease;
+}
+
+.preview-btn:hover {
     text-decoration: none;
     color: #0056b3;
-  }
-  
-  /* Стили для прочитанных и непрочитанных постов */
-  .fw-bold {
+}
+
+/* Стили для прочитанных и непрочитанных постов */
+.fw-bold {
     font-weight: bold;
     color: #007bff;
-  }
-  
-  .fw-normal {
+}
+
+.fw-normal {
     font-weight: normal;
     color: #495057;
-  }
-  
-  .fw-normal a {
+    opacity: 0.8;
+    transition: opacity 0.3s ease, color 0.3s ease;
+}
+
+.fw-normal:hover {
+    opacity: 1;
+    color: #343a40;
+}
+
+.fw-normal a {
     color: inherit;
     text-decoration: none;
-  }
-  
-  .fw-normal a:hover {
+}
+
+.fw-normal a:hover {
     text-decoration: underline;
     color: #0056b3;
-  }
-  
+}

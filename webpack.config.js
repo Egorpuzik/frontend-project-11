@@ -1,7 +1,11 @@
-const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
+import path from 'path';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+import { fileURLToPath } from 'url';
 
-module.exports = {
+// Получаем текущий путь к директории с помощью fileURLToPath
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+export default {
   entry: './src/index.js',
   output: {
     filename: 'bundle.js',
