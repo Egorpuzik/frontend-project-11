@@ -1,5 +1,4 @@
 import i18next from 'i18next';
-import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
 // Импорт локальных JSON-файлов с переводами
@@ -8,7 +7,6 @@ import translationRU from './locales/ru.json';
 
 i18next
   .use(LanguageDetector) // Определение языка пользователя
-  .use(initReactI18next) // Интеграция с React
   .init({
     resources: {
       en: { translation: translationEN },

@@ -6,14 +6,24 @@ const renderError = (elements, error) => {
   feedback.textContent = error || '';
 };
 
-const renderFeeds = (elements, feeds) => {
-  const { feedsContainer } = elements;
-  feedsContainer.innerHTML = ''; // Очищаем контейнер перед ререндером
-
+const createList = (items, createItem) => {
+  if (items.length === 0) return null;
   const list = document.createElement('ul');
   list.classList.add('list-group');
 
-  feeds.forEach(({ title, description }) => {
+  items.forEach((item) => {
+    const listItem = createItem(item);
+    list.appendChild(listItem);
+  });
+
+  return list;
+};
+
+const renderFeeds = (elements, feeds) => {
+  const { feedsContainer } = elements;
+  feedsContainer.innerHTML = '';
+
+  const list = createList(feeds, ({ title, description }) => {
     const listItem = document.createElement('li');
     listItem.classList.add('list-group-item');
 
@@ -24,20 +34,17 @@ const renderFeeds = (elements, feeds) => {
     feedDescription.textContent = description;
 
     listItem.append(feedTitle, feedDescription);
-    list.appendChild(listItem);
+    return listItem;
   });
 
-  feedsContainer.appendChild(list);
+  if (list) feedsContainer.appendChild(list);
 };
 
 const renderPosts = (elements, posts) => {
   const { postsContainer } = elements;
-  postsContainer.innerHTML = ''; // Очищаем перед ререндером
+  postsContainer.innerHTML = '';
 
-  const list = document.createElement('ul');
-  list.classList.add('list-group');
-
-  posts.forEach(({ title, link }) => {
+  const list = createList(posts, ({ title, link }) => {
     const listItem = document.createElement('li');
     listItem.classList.add('list-group-item');
 
@@ -47,24 +54,25 @@ const renderPosts = (elements, posts) => {
     postLink.target = '_blank';
 
     listItem.appendChild(postLink);
-    list.appendChild(listItem);
+    return listItem;
   });
 
-  postsContainer.appendChild(list);
+  if (list) postsContainer.appendChild(list);
 };
 
-export const initView = (state, elements) => {
-  return onChange(state, (path, value) => {
-    if (path === 'form.error') {
-      renderError(elements, value);
-    }
-
-    if (path === 'feeds') {
-      renderFeeds(elements, value);
-    }
-
-    if (path === 'posts') {
-      renderPosts(elements, value);
+export const initView = (state, elements) =>
+  onChange(state, (path, value) => {
+    switch (path) {
+      case 'form.error':
+        renderError(elements, value);
+        break;
+      case 'feeds':
+        renderFeeds(elements, value);
+        break;
+      case 'posts':
+        renderPosts(elements, value);
+        break;
+      default:
+        break;
     }
   });
-};
