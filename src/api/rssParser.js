@@ -6,16 +6,17 @@ export const fetchRSS = async (url) => {
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(response.data.contents, 'application/xml');
 
-    // Проверяем, есть ли ошибка в XML
     if (xmlDoc.querySelector('parsererror')) {
       throw new Error('Ошибка парсинга RSS');
     }
 
     return xmlDoc;
   } catch (error) {
+    console.error('Ошибка загрузки RSS:', error);
     throw new Error('Ошибка загрузки RSS');
   }
 };
+
 
 export const parseRSS = (xmlDoc) => {
   // Получаем информацию о самом RSS-канале

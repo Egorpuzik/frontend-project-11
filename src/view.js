@@ -1,3 +1,4 @@
+import 'bootstrap';
 import onChange from 'on-change';
 
 const renderError = (elements, error) => {
@@ -87,14 +88,18 @@ export const openModal = (title, description, link) => {
   modalBody.textContent = description;
   modalLink.setAttribute('href', link);
 
-  const modal = new bootstrap.Modal(document.getElementById('modal'));
-  modal.show();
+  import('bootstrap').then(({ Modal }) => {
+    const modal = new Modal(document.getElementById('modal'));
+    modal.show();
+  });
 };
 
 // Экспорты для использования в других частях приложения
 export const hideModal = () => {
-  const modal = new bootstrap.Modal(document.getElementById('modal'));
-  modal.hide();
+  import('bootstrap').then(({ Modal }) => {
+    const modal = new Modal(document.getElementById('modal'));
+    modal.hide();
+  });
 };
 
 export const showModal = (title, description, link) => {

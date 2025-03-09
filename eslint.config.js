@@ -1,14 +1,9 @@
-import { defineConfig } from 'eslint-define-config';
+import globals from "globals";
+import pluginJs from "@eslint/js";
 
-export default defineConfig({
-  languageOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-  },
-  rules: {
-  'no-console': 'warn', 
-  'no-unused-vars': 'error', 
-  'eqeqeq': 'error',
-  },
-});
 
+/** @type {import('eslint').Linter.Config[]} */
+export default [
+  {languageOptions: { globals: globals.browser }},
+  pluginJs.configs.recommended,
+];
