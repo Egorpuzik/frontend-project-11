@@ -1,7 +1,11 @@
 module.exports = {
     "env": {
         "browser": true,
-        "es2021": true
+        "es2021": true,
+        "node": true
+    },
+    "globals": {
+        "process": "readonly"  
     },
     "extends": [
         "google"
@@ -10,6 +14,6 @@ module.exports = {
         "ecmaVersion": 15,
         "sourceType": "module"
     },
-    "rules": {
-    }
+    "rules": {}
 };
+

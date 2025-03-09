@@ -1,32 +1,36 @@
 import path from 'path';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
+import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import { fileURLToPath } from 'url';
 
-// Получаем текущий путь к директории с помощью fileURLToPath
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = path.dirname(fileURLToPath(import.meta.url)); 
+const isProduction = process.env.NODE_ENV === 'production'; 
 
 export default {
-  entry: './src/index.js',
+  mode: isProduction ? 'production' : 'development', 
+  entry: './src/index.js', 
   output: {
-    filename: 'bundle.js',
-    path: path.resolve(__dirname, 'dist'),
-    clean: true,
+    filename: '[name].[contenthash].js',  // Добавлен хэш для уникальности
+    path: path.resolve(__dirname, 'dist'), 
+    clean: true, 
   },
   plugins: [
-    new HtmlWebpackPlugin({
-      template: './index.html',
-    }),
+    new HtmlWebpackPlugin({ template: './index.html' }), 
+    new MiniCssExtractPlugin({ filename: '[name].[contenthash].css' }),  // Добавлен хэш для CSS
   ],
   module: {
     rules: [
       {
-        test: /\.css$/i,
-        use: ['style-loader', 'css-loader'],
+        test: /\.css$/i, 
+        use: [MiniCssExtractPlugin.loader, 'css-loader'], 
       },
     ],
   },
-  devServer: {
-    static: './dist',
+  optimization: {
+    splitChunks: { chunks: 'all' },  // Код разделяется на чанки
   },
-  mode: 'development',
+  devServer: {
+    static: './dist',  // Путь для статики
+  },
 };
+

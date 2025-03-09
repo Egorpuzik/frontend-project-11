@@ -1,4 +1,5 @@
-import 'bootstrap';
+import 'bootstrap'; 
+import { Modal } from 'bootstrap'; 
 import onChange from 'on-change';
 
 const renderError = (elements, error) => {
@@ -88,20 +89,17 @@ export const openModal = (title, description, link) => {
   modalBody.textContent = description;
   modalLink.setAttribute('href', link);
 
-  import('bootstrap').then(({ Modal }) => {
-    const modal = new Modal(document.getElementById('modal'));
-    modal.show();
-  });
+  const modal = new Modal(document.getElementById('modal'));
+  modal.show();
 };
 
-// Экспорты для использования в других частях приложения
+// Функция для скрытия модального окна
 export const hideModal = () => {
-  import('bootstrap').then(({ Modal }) => {
-    const modal = new Modal(document.getElementById('modal'));
-    modal.hide();
-  });
+  const modal = new Modal(document.getElementById('modal'));
+  modal.hide();
 };
 
+// Функция для показа модального окна
 export const showModal = (title, description, link) => {
   openModal(title, description, link);
 };
