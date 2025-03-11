@@ -17,7 +17,6 @@ export const fetchRSS = async (url) => {
   }
 };
 
-
 export const parseRSS = (xmlDoc) => {
   // Получаем информацию о самом RSS-канале
   const feed = {

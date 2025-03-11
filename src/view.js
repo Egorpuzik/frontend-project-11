@@ -1,5 +1,5 @@
-import 'bootstrap'; 
-import { Modal } from 'bootstrap'; 
+import { Modal } from 'bootstrap';
+
 import onChange from 'on-change';
 
 const renderError = (elements, error) => {
@@ -62,22 +62,21 @@ const renderPosts = (elements, posts) => {
   if (list) postsContainer.appendChild(list);
 };
 
-export const initView = (state, elements) =>
-  onChange(state, (path, value) => {
-    switch (path) {
-      case 'form.error':
-        renderError(elements, value);
-        break;
-      case 'feeds':
-        renderFeeds(elements, value);
-        break;
-      case 'posts':
-        renderPosts(elements, value);
-        break;
-      default:
-        break;
-    }
-  });
+export const initView = (state, elements) => onChange(state, (path, value) => {
+  switch (path) {
+    case 'form.error':
+      renderError(elements, value);
+      break;
+    case 'feeds':
+      renderFeeds(elements, value);
+      break;
+    case 'posts':
+      renderPosts(elements, value);
+      break;
+    default:
+      break;
+  }
+});
 
 // Функция для открытия модального окна
 export const openModal = (title, description, link) => {

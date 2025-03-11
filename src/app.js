@@ -68,7 +68,7 @@ export default () => {
 
     document.querySelectorAll('.preview-btn').forEach((button) => {
       button.addEventListener('click', (e) => {
-        const index = e.target.dataset.index;
+        const { index } = e.target.dataset;
         const post = state.posts[index];
 
         showModal(post.title, post.description, post.link); // Используем showModal
@@ -83,9 +83,7 @@ export default () => {
     setInterval(() => {
       state.feeds.forEach((feed) => {
         checkForUpdates(feed.link).then((newPosts) => {
-          const uniquePosts = newPosts.filter((post) =>
-            !state.posts.some((existing) => existing.link === post.link)
-          );
+          const uniquePosts = newPosts.filter((post) => !state.posts.some((existing) => existing.link === post.link));
 
           if (uniquePosts.length > 0) {
             state.posts.unshift(...uniquePosts);

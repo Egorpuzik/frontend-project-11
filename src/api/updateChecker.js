@@ -8,9 +8,7 @@ export const checkForUpdates = async (feeds, state) => {
       const { posts } = parseRSS(rssData);
 
       // Проверка наличия новых постов (сравниваем с уже загруженными)
-      const newPosts = posts.filter((post) => {
-        return !state.posts.some((existingPost) => existingPost.link === post.link);
-      });
+      const newPosts = posts.filter((post) => !state.posts.some((existingPost) => existingPost.link === post.link));
 
       // Если новые посты есть, добавляем их в список
       if (newPosts.length > 0) {
