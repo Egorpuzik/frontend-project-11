@@ -1,22 +1,25 @@
 import i18next from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
-// Импорт локальных JSON-файлов с переводами
-import translationEN from './locales/en.json';
-import translationRU from './locales/ru.json';
+const loadTranslations = async () => {
+  const [en, ru] = await Promise.all([
+    fetch('/locales/en.json').then((res) => res.json()),
+    fetch('/locales/ru.json').then((res) => res.json()),
+  ]);
 
-i18next
-  .use(LanguageDetector) // Определение языка пользователя
-  .init({
-    resources: {
-      en: { translation: translationEN },
-      ru: { translation: translationRU },
-    },
-    fallbackLng: 'en', // Язык по умолчанию
-    debug: true, // Включаем логи в консоли
-    interpolation: {
-      escapeValue: false, // Отключаем экранирование HTML
-    },
-  });
+  i18next
+    .use(LanguageDetector)
+    .init({
+      resources: {
+        en: { translation: en },
+        ru: { translation: ru },
+      },
+      fallbackLng: 'en',
+      debug: true,
+      interpolation: { escapeValue: false },
+    });
+};
+
+loadTranslations();
 
 export default i18next;

@@ -1,5 +1,5 @@
-import { validateUrl } from './validation.js';
-import { initView, showModal } from './view.js'; // Импортируем showModal
+import validateUrl from './validation.js';
+import { initView, showModal } from './view.js';
 import { fetchRSS, parseRSS } from './api/rssParser.js';
 import { checkForUpdates } from './api/updateChecker.js';
 
@@ -20,6 +20,51 @@ export default () => {
   };
 
   const watchedState = initView(state, elements);
+
+  const renderPosts = () => {
+    elements.postsContainer.innerHTML = state.posts
+      .map((post, index) => {
+        const isRead = state.readPosts.has(post.link);
+        return `
+          <div class="post ${isRead ? 'fw-normal' : 'fw-bold'}">
+            <a href="${post.link}" target="_blank">${post.title}</a>
+            <button class="btn btn-link preview-btn" data-index="${index}">
+              Предпросмотр
+            </button>
+          </div>
+        `;
+      })
+      .join('');
+
+    document.querySelectorAll('.preview-btn').forEach((button) => {
+      button.addEventListener('click', (e) => {
+        const { index } = e.target.dataset;
+        const post = state.posts[index];
+
+        showModal(post.title, post.description, post.link);
+        state.readPosts.add(post.link);
+
+        renderPosts();
+      });
+    });
+  };
+
+  const startUpdateChecker = () => {
+    setInterval(() => {
+      state.feeds.forEach((feed) => {
+        checkForUpdates(feed.link).then((newPosts) => {
+          const uniquePosts = newPosts.filter(
+            (post) => !state.posts.some((existing) => existing.link === post.link),
+          );
+
+          if (uniquePosts.length > 0) {
+            state.posts.unshift(...uniquePosts);
+            renderPosts();
+          }
+        });
+      });
+    }, 5000);
+  };
 
   const addFeed = (url) => {
     if (state.feeds.some((feed) => feed.link === url)) {
@@ -51,47 +96,6 @@ export default () => {
       .catch((err) => {
         watchedState.form.error = err.message;
       });
-  };
-
-  const renderPosts = () => {
-    const postsHtml = state.posts.map((post, index) => {
-      const isRead = state.readPosts.has(post.link);
-      return `
-        <div class="post ${isRead ? 'fw-normal' : 'fw-bold'}">
-          <a href="${post.link}" target="_blank">${post.title}</a>
-          <button class="btn btn-link preview-btn" data-index="${index}">Предпросмотр</button>
-        </div>
-      `;
-    }).join('');
-
-    elements.postsContainer.innerHTML = postsHtml;
-
-    document.querySelectorAll('.preview-btn').forEach((button) => {
-      button.addEventListener('click', (e) => {
-        const { index } = e.target.dataset;
-        const post = state.posts[index];
-
-        showModal(post.title, post.description, post.link); // Используем showModal
-        state.readPosts.add(post.link);
-
-        renderPosts();
-      });
-    });
-  };
-
-  const startUpdateChecker = () => {
-    setInterval(() => {
-      state.feeds.forEach((feed) => {
-        checkForUpdates(feed.link).then((newPosts) => {
-          const uniquePosts = newPosts.filter((post) => !state.posts.some((existing) => existing.link === post.link));
-
-          if (uniquePosts.length > 0) {
-            state.posts.unshift(...uniquePosts);
-            renderPosts();
-          }
-        });
-      });
-    }, 5000);
   };
 
   elements.form.addEventListener('submit', (e) => {
