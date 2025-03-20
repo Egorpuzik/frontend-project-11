@@ -21,10 +21,10 @@ export default () => {
 
   const watchedState = initView(state, elements);
 
-  const renderPosts = () => {
-    elements.postsContainer.innerHTML = state.posts
+  const renderPosts = (localState) => {
+    const updatedHTML = localState.posts
       .map((post, index) => {
-        const isRead = state.readPosts.has(post.link);
+        const isRead = localState.readPosts.has(post.link);
         return `
           <div class="post ${isRead ? 'fw-normal' : 'fw-bold'}">
             <a href="${post.link}" target="_blank">${post.title}</a>
@@ -36,39 +36,39 @@ export default () => {
       })
       .join('');
 
+    elements.postsContainer.innerHTML = updatedHTML;
+
     document.querySelectorAll('.preview-btn').forEach((button) => {
       button.addEventListener('click', (e) => {
         const { index } = e.target.dataset;
-        const post = state.posts[index];
+        const post = localState.posts[index];
 
         showModal(post.title, post.description, post.link);
-        state.readPosts.add(post.link);
+        localState.readPosts.add(post.link);
 
-        renderPosts();
+        renderPosts(localState);
       });
     });
   };
 
-  const startUpdateChecker = () => {
+  const startUpdateChecker = (localState, renderFunction) => {
     setInterval(() => {
-      state.feeds.forEach((feed) => {
+      localState.feeds.forEach((feed) => {
         checkForUpdates(feed.link).then((newPosts) => {
-          const uniquePosts = newPosts.filter(
-            (post) => !state.posts.some((existing) => existing.link === post.link),
-          );
-
+          const existingLinks = new Set(localState.posts.map((p) => p.link));
+          const uniquePosts = newPosts.filter((post) => !existingLinks.has(post.link));
           if (uniquePosts.length > 0) {
-            state.posts.unshift(...uniquePosts);
-            renderPosts();
+            localState.posts.push(...uniquePosts);
+            renderFunction(localState);
           }
         });
       });
     }, 5000);
   };
 
-  const addFeed = (url) => {
-    if (state.feeds.some((feed) => feed.link === url)) {
-      watchedState.form.error = 'RSS уже существует';
+  const addFeed = (url, localState, localWatchedState) => {
+    if (localState.feeds.some((feed) => feed.link === url)) {
+      Object.assign(localWatchedState.form, { error: 'RSS уже существует' });
       return;
     }
 
@@ -80,21 +80,23 @@ export default () => {
         };
         const posts = parseRSS(xmlDoc);
 
-        state.feeds.push(feed);
-        state.posts.push(...posts);
-        watchedState.form.error = null;
-        elements.input.value = '';
-        elements.input.focus();
+        localState.feeds.push(feed);
+        localState.posts.push(...posts);
+        Object.assign(localWatchedState.form, { error: null });
 
-        renderPosts();
+        const inputElement = elements.input;
+        inputElement.value = '';
+        inputElement.focus();
 
-        if (!state.isUpdating) {
-          startUpdateChecker();
-          state.isUpdating = true;
+        renderPosts(localState);
+
+        if (!localState.isUpdating) {
+          Object.assign(localState, { isUpdating: true });
+          startUpdateChecker(localState, renderPosts);
         }
       })
       .catch((err) => {
-        watchedState.form.error = err.message;
+        Object.assign(localWatchedState.form, { error: err.message });
       });
   };
 
@@ -103,9 +105,9 @@ export default () => {
     const url = elements.input.value.trim();
 
     validateUrl(url, state.feeds)
-      .then(() => addFeed(url))
+      .then(() => addFeed(url, state, watchedState))
       .catch((err) => {
-        watchedState.form.error = err.message;
+        Object.assign(watchedState.form, { error: err.message });
       });
   });
 };
