@@ -1,9 +1,19 @@
+import i18next from 'i18next';
+import onChange from 'on-change';
 import validateUrl from './validation.js';
 import { initView, showModal } from './view.js';
 import { fetchRSS, parseRSS } from './api/rssParser.js';
 import { checkForUpdates } from './api/updateChecker.js';
 
 export default () => {
+  i18next.init({
+    lng: 'ru',
+    resources: {
+      ru: { translation: { preview: 'Предпросмотр', rssExists: 'RSS уже существует' } },
+      en: { translation: { preview: 'Preview', rssExists: 'RSS already exists' } },
+    },
+  });
+
   const state = {
     form: { error: null },
     feeds: [],
@@ -19,20 +29,18 @@ export default () => {
     postsContainer: document.querySelector('.posts'),
   };
 
-  const watchedState = initView(state, elements);
-
-  const renderPosts = (localState) => {
-    const updatedHTML = localState.posts
+  const renderPosts = () => {
+    const updatedHTML = state.posts
       .map((post, index) => {
-        const isRead = localState.readPosts.has(post.link);
+        const isRead = state.readPosts.has(post.link);
         return `
           <div class="post ${isRead ? 'fw-normal' : 'fw-bold'}">
             <a href="${post.link}" target="_blank">${post.title}</a>
             <button class="btn btn-link preview-btn" data-index="${index}">
-              Предпросмотр
+              ${i18next.t('preview')}
             </button>
           </div>
-        `;
+        `.trim();
       })
       .join('');
 
@@ -41,62 +49,69 @@ export default () => {
     document.querySelectorAll('.preview-btn').forEach((button) => {
       button.addEventListener('click', (e) => {
         const { index } = e.target.dataset;
-        const post = localState.posts[index];
-
+        const post = state.posts[index];
         showModal(post.title, post.description, post.link);
-        localState.readPosts.add(post.link);
-
-        renderPosts(localState);
+        state.readPosts.add(post.link);
       });
     });
   };
 
-  const startUpdateChecker = (localState, renderFunction) => {
-    setInterval(() => {
-      localState.feeds.forEach((feed) => {
-        checkForUpdates(feed.link).then((newPosts) => {
-          const existingLinks = new Set(localState.posts.map((p) => p.link));
-          const uniquePosts = newPosts.filter((post) => !existingLinks.has(post.link));
-          if (uniquePosts.length > 0) {
-            localState.posts.push(...uniquePosts);
-            renderFunction(localState);
-          }
-        });
-      });
-    }, 5000);
+  const watchedState = onChange(state, () => {
+    renderPosts();
+  });
+
+  initView(watchedState, elements);
+
+  const startUpdateChecker = () => {
+    const updateFeeds = async () => {
+      try {
+        const updatePromises = state.feeds.map((feed) => checkForUpdates(feed.link)
+          .then((newPosts) => {
+            const existingLinks = new Set(state.posts.map((p) => p.link));
+            const uniquePosts = newPosts.filter((post) => !existingLinks.has(post.link));
+
+            if (uniquePosts.length > 0) {
+              state.posts.push(...uniquePosts);
+            }
+          }));
+        await Promise.all(updatePromises);
+      } catch (error) {
+        console.error('Error updating feeds:', error);
+      } finally {
+        setTimeout(updateFeeds, 5000);
+      }
+    };
+    updateFeeds();
   };
 
-  const addFeed = (url, localState, localWatchedState) => {
-    if (localState.feeds.some((feed) => feed.link === url)) {
-      Object.assign(localWatchedState.form, { error: 'RSS уже существует' });
+  const addFeed = (url) => {
+    if (state.feeds.some((feed) => feed.link === url)) {
+      watchedState.form.error = i18next.t('rssExists');
       return;
     }
 
     fetchRSS(url)
       .then((xmlDoc) => {
         const feed = {
-          title: xmlDoc.querySelector('title')?.textContent || 'Без названия',
+          title: xmlDoc.querySelector('title')?.textContent || 'No title',
           link: url,
         };
         const posts = parseRSS(xmlDoc);
 
-        localState.feeds.push(feed);
-        localState.posts.push(...posts);
-        Object.assign(localWatchedState.form, { error: null });
+        watchedState.feeds.push(feed);
+        watchedState.posts.push(...posts);
+        watchedState.form.error = null;
 
-        const inputElement = elements.input;
-        inputElement.value = '';
-        inputElement.focus();
+        elements.input.value = '';
+        elements.input.focus();
 
-        renderPosts(localState);
-
-        if (!localState.isUpdating) {
-          Object.assign(localState, { isUpdating: true });
-          startUpdateChecker(localState, renderPosts);
+        if (!state.isUpdating) {
+          state.isUpdating = true;
+          startUpdateChecker();
         }
       })
       .catch((err) => {
-        Object.assign(localWatchedState.form, { error: err.message });
+        watchedState.form.error = err.message;
       });
   };
 
@@ -105,9 +120,9 @@ export default () => {
     const url = elements.input.value.trim();
 
     validateUrl(url, state.feeds)
-      .then(() => addFeed(url, state, watchedState))
+      .then(() => addFeed(url))
       .catch((err) => {
-        Object.assign(watchedState.form, { error: err.message });
+        watchedState.form.error = err.message;
       });
   });
 };

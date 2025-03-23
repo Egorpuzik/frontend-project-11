@@ -2,34 +2,35 @@ import axios from 'axios';
 
 export const fetchRSS = async (url) => {
   try {
-    const response = await axios.get(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
-    const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(response.data.contents, 'application/xml');
+    const rssUrl = new URL(url);
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl.href)}`;
 
-    if (xmlDoc.querySelector('parsererror')) {
-      throw new Error('Ошибка парсинга RSS');
-    }
-
-    return xmlDoc;
+    const response = await axios.get(proxyUrl);
+    return response.data.contents;
   } catch (error) {
-    console.error('Ошибка загрузки RSS:', error);
+    console.error(`Ошибка загрузки RSS: ${error.message}`);
     throw new Error('Ошибка загрузки RSS');
   }
 };
 
-export const parseRSS = (xmlDoc) => {
-  // Получаем информацию о самом RSS-канале
+export const parseRSS = (xmlString) => {
+  const parser = new DOMParser();
+  const xmlDoc = parser.parseFromString(xmlString, 'application/xml');
+
+  if (xmlDoc.querySelector('parsererror')) {
+    throw new Error('Ошибка парсинга RSS');
+  }
+
   const feed = {
-    title: xmlDoc.querySelector('channel > title')?.textContent || 'Без названия',
-    description: xmlDoc.querySelector('channel > description')?.textContent || '',
+    title: xmlDoc.querySelector('channel > title')?.textContent?.trim() || 'Без названия',
+    description: xmlDoc.querySelector('channel > description')?.textContent?.trim() || '',
   };
 
-  // Получаем список постов
   const items = xmlDoc.querySelectorAll('item');
   const posts = Array.from(items).map((item) => ({
-    title: item.querySelector('title')?.textContent || 'Без заголовка',
-    link: item.querySelector('link')?.textContent || '#',
-    description: item.querySelector('description')?.textContent || '',
+    title: item.querySelector('title')?.textContent?.trim() || 'Без заголовка',
+    link: item.querySelector('link')?.textContent?.trim() || '#',
+    description: item.querySelector('description')?.textContent?.trim() || '',
   }));
 
   return { feed, posts };
