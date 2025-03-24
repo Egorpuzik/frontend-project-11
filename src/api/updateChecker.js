@@ -1,10 +1,5 @@
 import axios from 'axios';
 
-/**
- * Загружает RSS-данные по URL.
- * @param {string} url - URL RSS-ленты.
- * @returns {Promise<string>} - Строка с XML-данными.
- */
 export const fetchRSS = async (url) => {
   try {
     const proxyUrl = new URL('https://api.allorigins.win/get');
@@ -23,11 +18,6 @@ export const fetchRSS = async (url) => {
   }
 };
 
-/**
- * Парсит XML-строку в объект с данными RSS-ленты и постами.
- * @param {string} xmlString - XML-данные в виде строки.
- * @returns {{ feed: Object, posts: Array }} - Объект с заголовком ленты и постами.
- */
 export const parseRSS = (xmlString) => {
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(xmlString, 'application/xml');
