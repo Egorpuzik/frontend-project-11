@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export const fetchRSSData = async (url) => {
+export const fetchRSS = async (url) => {
   try {
     const apiUrl = new URL('https://api.allorigins.win/get');
     apiUrl.searchParams.append('url', url);

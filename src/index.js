@@ -1,5 +1,5 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './styles/modal.css'; // Импорт стилей модального окна
+import './styles/modal.css';
 import app from './app.js';
 import './i18n.js';
 
