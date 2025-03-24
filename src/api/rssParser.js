@@ -1,14 +1,13 @@
 import axios from 'axios';
 
-export const fetchRSS = async (url) => {
+export const fetchRSSData = async (url) => {
   try {
-    const rssUrl = new URL(url);
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl.href)}`;
-
-    const response = await axios.get(proxyUrl);
+    const apiUrl = new URL('https://api.allorigins.win/get');
+    apiUrl.searchParams.append('url', url);
+    const response = await axios.get(apiUrl.toString());
     return response.data.contents;
   } catch (error) {
-    console.error(`Ошибка загрузки RSS: ${error.message}`);
+    console.error('Ошибка загрузки RSS:', error);
     throw new Error('Ошибка загрузки RSS');
   }
 };
@@ -22,15 +21,15 @@ export const parseRSS = (xmlString) => {
   }
 
   const feed = {
-    title: xmlDoc.querySelector('channel > title')?.textContent?.trim() || 'Без названия',
-    description: xmlDoc.querySelector('channel > description')?.textContent?.trim() || '',
+    title: xmlDoc.querySelector('channel > title')?.textContent || 'Без названия',
+    description: xmlDoc.querySelector('channel > description')?.textContent || '',
   };
 
   const items = xmlDoc.querySelectorAll('item');
   const posts = Array.from(items).map((item) => ({
-    title: item.querySelector('title')?.textContent?.trim() || 'Без заголовка',
-    link: item.querySelector('link')?.textContent?.trim() || '#',
-    description: item.querySelector('description')?.textContent?.trim() || '',
+    title: item.querySelector('title')?.textContent || 'Без заголовка',
+    link: item.querySelector('link')?.textContent || '#',
+    description: item.querySelector('description')?.textContent || '',
   }));
 
   return { feed, posts };

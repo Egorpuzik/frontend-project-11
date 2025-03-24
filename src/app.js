@@ -3,14 +3,13 @@ import onChange from 'on-change';
 import validateUrl from './validation.js';
 import { initView, showModal } from './view.js';
 import { fetchRSS, parseRSS } from './api/rssParser.js';
-import { checkForUpdates } from './api/updateChecker.js';
 
 export default () => {
   i18next.init({
     lng: 'ru',
     resources: {
-      ru: { translation: { preview: 'Предпросмотр', rssExists: 'RSS уже существует' } },
-      en: { translation: { preview: 'Preview', rssExists: 'RSS already exists' } },
+      ru: { translation: { preview: 'Предпросмотр', rssExists: 'RSS уже существует', noTitle: 'Без названия' } },
+      en: { translation: { preview: 'Preview', rssExists: 'RSS already exists', noTitle: 'No title' } },
     },
   });
 
@@ -19,7 +18,7 @@ export default () => {
     feeds: [],
     posts: [],
     readPosts: new Set(),
-    isUpdating: false,
+    feedAddingStatus: 'idle',
   };
 
   const elements = {
@@ -30,7 +29,7 @@ export default () => {
   };
 
   const renderPosts = () => {
-    const updatedHTML = state.posts
+    elements.postsContainer.innerHTML = state.posts
       .map((post, index) => {
         const isRead = state.readPosts.has(post.link);
         return `
@@ -40,11 +39,9 @@ export default () => {
               ${i18next.t('preview')}
             </button>
           </div>
-        `.trim();
+        `;
       })
       .join('');
-
-    elements.postsContainer.innerHTML = updatedHTML;
 
     document.querySelectorAll('.preview-btn').forEach((button) => {
       button.addEventListener('click', (e) => {
@@ -56,73 +53,73 @@ export default () => {
     });
   };
 
-  const watchedState = onChange(state, () => {
-    renderPosts();
+  const watchedState = onChange(state, (path) => {
+    if (path.startsWith('posts') || path === 'readPosts') renderPosts();
   });
 
-  initView(watchedState, elements);
+  const updateFeeds = async () => {
+    if (watchedState.feeds.length === 0) {
+      setTimeout(updateFeeds, 5000);
+      return null;
+    }
 
-  const startUpdateChecker = () => {
-    const updateFeeds = async () => {
+    await Promise.all(watchedState.feeds.map(async (feed) => {
       try {
-        const updatePromises = state.feeds.map((feed) => checkForUpdates(feed.link)
-          .then((newPosts) => {
-            const existingLinks = new Set(state.posts.map((p) => p.link));
-            const uniquePosts = newPosts.filter((post) => !existingLinks.has(post.link));
+        const xmlDoc = await fetchRSS(feed.link);
+        const { posts } = parseRSS(xmlDoc);
 
-            if (uniquePosts.length > 0) {
-              state.posts.push(...uniquePosts);
-            }
-          }));
-        await Promise.all(updatePromises);
+        const existingLinks = new Set(watchedState.posts.map((p) => p.link));
+        const newPosts = posts.filter((post) => !existingLinks.has(post.link));
+
+        if (newPosts.length > 0) watchedState.posts.push(...newPosts);
       } catch (error) {
-        console.error('Error updating feeds:', error);
-      } finally {
-        setTimeout(updateFeeds, 5000);
+        console.error(`Ошибка обновления фида ${feed.link}:`, error);
       }
-    };
-    updateFeeds();
+    }));
+
+    setTimeout(updateFeeds, 5000);
+    return null;
   };
 
-  const addFeed = (url) => {
-    if (state.feeds.some((feed) => feed.link === url)) {
+  const addFeed = async (url) => {
+    if (watchedState.feeds.some((feed) => feed.link === url)) {
       watchedState.form.error = i18next.t('rssExists');
+      watchedState.feedAddingStatus = 'error';
       return;
     }
 
-    fetchRSS(url)
-      .then((xmlDoc) => {
-        const feed = {
-          title: xmlDoc.querySelector('title')?.textContent || 'No title',
-          link: url,
-        };
-        const posts = parseRSS(xmlDoc);
+    watchedState.feedAddingStatus = 'pending';
 
-        watchedState.feeds.push(feed);
-        watchedState.posts.push(...posts);
-        watchedState.form.error = null;
+    try {
+      const xmlDoc = await fetchRSS(url);
+      const { feed, posts } = parseRSS(xmlDoc);
 
-        elements.input.value = '';
-        elements.input.focus();
+      watchedState.feeds.push({ title: feed.title || i18next.t('noTitle'), link: url });
+      watchedState.posts.push(...posts);
 
-        if (!state.isUpdating) {
-          state.isUpdating = true;
-          startUpdateChecker();
-        }
-      })
-      .catch((err) => {
-        watchedState.form.error = err.message;
-      });
+      watchedState.form.error = null;
+      watchedState.feedAddingStatus = 'success';
+      elements.input.value = '';
+      elements.input.focus();
+
+      if (watchedState.feeds.length === 1) updateFeeds();
+    } catch (error) {
+      watchedState.form.error = error.message;
+      watchedState.feedAddingStatus = 'error';
+    }
   };
 
   elements.form.addEventListener('submit', (e) => {
     e.preventDefault();
     const url = elements.input.value.trim();
 
-    validateUrl(url, state.feeds)
+    validateUrl(url, watchedState.feeds)
       .then(() => addFeed(url))
       .catch((err) => {
         watchedState.form.error = err.message;
+        watchedState.feedAddingStatus = 'error';
       });
   });
+
+  initView(state, elements);
 };

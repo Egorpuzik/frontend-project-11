@@ -1,31 +1,36 @@
 import { fetchRSS, parseRSS } from './rssParser.js';
 
-export const checkForUpdates = async (state) => {
-  const { feeds, posts } = state;
-
-  const checkNewPosts = async (feed) => {
+export const checkForUpdates = async (feeds, state) => {
+  const checkNewPosts = async (url) => {
     try {
-      const rssData = await fetchRSS(feed.link);
-      const { posts: newPosts } = parseRSS(rssData);
+      const rssData = await fetchRSS(url);
+      const { posts } = parseRSS(rssData);
 
-      const existingLinks = new Set(posts.map((post) => post.link));
-      const uniquePosts = newPosts.filter((post) => !existingLinks.has(post.link));
+      const newPosts = posts.filter(
+        (post) => !state.posts.some((existingPost) => existingPost.link === post.link),
+      );
 
-      if (uniquePosts.length > 0) {
-        state.posts.push(...uniquePosts);
+      if (newPosts.length > 0) {
+        state.posts.push(...newPosts);
       }
     } catch (error) {
-      console.error(`Ошибка при проверке обновлений для ${feed.link}: ${error.message}`);
+      console.error(`Ошибка при проверке обновлений для ${url}: ${error.message}`);
     }
   };
 
-  await Promise.all(feeds.map(checkNewPosts));
+  const updatePromises = feeds.map((url) => checkNewPosts(url));
+  await Promise.all(updatePromises);
 };
 
-export const startUpdateChecking = (state) => {
+export const startUpdateChecking = (feeds, state) => {
   const checkUpdates = async () => {
-    await checkForUpdates(state);
-    setTimeout(checkUpdates, 5000);
+    try {
+      await checkForUpdates(feeds, state);
+    } catch (error) {
+      console.error('Ошибка при обновлении фидов:', error);
+    } finally {
+      setTimeout(checkUpdates, 5000);
+    }
   };
 
   checkUpdates();
