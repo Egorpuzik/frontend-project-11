@@ -1,11 +1,13 @@
 import axios from 'axios';
 
-const proxy = 'https://allorigins.hexlet.app/get?disableCache=true&url=';
+const proxy = 'https://allorigins.hexlet.app/get';
 
 const fetchRSS = async (url) => {
   try {
     const apiUrl = new URL(proxy);
+    apiUrl.searchParams.append('disableCache', 'true');
     apiUrl.searchParams.append('url', url);
+
     const response = await axios.get(apiUrl.toString());
 
     if (response.status !== 200) {

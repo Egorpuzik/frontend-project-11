@@ -2,7 +2,7 @@ import i18next from 'i18next';
 import onChange from 'on-change';
 import validateUrl from './validation.js';
 import { initView, showModal } from './view.js';
-import fetchRSS, { parseRSS } from './api/rssParser.js';
+import { fetchRSS, parseRSS } from './api/rssParser.js';
 
 export default () => {
   i18next.init({
