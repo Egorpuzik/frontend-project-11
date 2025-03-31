@@ -19,6 +19,7 @@ export default () => {
     posts: [],
     readPosts: new Set(),
     feedAddingStatus: 'idle',
+    modalPost: null,
   };
 
   const elements = {
@@ -27,6 +28,8 @@ export default () => {
     feedback: document.querySelector('.feedback'),
     postsContainer: document.querySelector('.posts'),
   };
+
+  let watchedState;
 
   const renderPosts = () => {
     elements.postsContainer.innerHTML = state.posts
@@ -47,14 +50,20 @@ export default () => {
       button.addEventListener('click', (e) => {
         const { index } = e.target.dataset;
         const post = state.posts[index];
-        showModal(post.title, post.description, post.link);
-        state.readPosts.add(post.link);
+        watchedState.modalPost = post;
+        watchedState.readPosts.add(post.link);
       });
     });
   };
 
-  const watchedState = onChange(state, (path) => {
-    if (path.startsWith('posts') || path === 'readPosts') renderPosts();
+  watchedState = onChange(state, (path, value) => {
+    if (path.startsWith('posts') || path === 'readPosts') {
+      renderPosts();
+    }
+    if (path === 'modalPost' && value) {
+      showModal(value.title, value.description, value.link);
+      watchedState.modalPost = null;
+    }
   });
 
   const updateFeeds = async () => {

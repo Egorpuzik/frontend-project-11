@@ -78,7 +78,6 @@ export const initView = (state, elements) => onChange(state, (path, value) => {
   }
 });
 
-// Функция для открытия модального окна
 export const openModal = (title, description, link) => {
   const modalTitle = document.querySelector('.modal-title');
   const modalBody = document.querySelector('.modal-body');
@@ -92,13 +91,11 @@ export const openModal = (title, description, link) => {
   modal.show();
 };
 
-// Функция для скрытия модального окна
 export const hideModal = () => {
   const modal = new Modal(document.getElementById('modal'));
   modal.hide();
 };
 
-// Функция для показа модального окна
 export const showModal = (title, description, link) => {
   openModal(title, description, link);
 };

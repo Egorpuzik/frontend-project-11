@@ -1,18 +1,4 @@
-import axios from 'axios';
-
-export const fetchRSS = async (url) => {
-  try {
-    const apiUrl = new URL('https://api.allorigins.win/get');
-    apiUrl.searchParams.append('url', url);
-    const response = await axios.get(apiUrl.toString());
-    return response.data.contents;
-  } catch (error) {
-    console.error('Ошибка загрузки RSS:', error);
-    throw new Error('Ошибка загрузки RSS');
-  }
-};
-
-export const parseRSS = (xmlString) => {
+const parseRSS = (xmlString) => {
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(xmlString, 'application/xml');
 
@@ -34,3 +20,5 @@ export const parseRSS = (xmlString) => {
 
   return { feed, posts };
 };
+
+export default parseRSS;

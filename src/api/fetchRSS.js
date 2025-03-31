@@ -1,14 +1,16 @@
 import axios from 'axios';
 
-const proxy = 'https://allorigins.hexlet.app/get?disableCache=true&url=';
+const PROXY_URL = 'https://allorigins.hexlet.app/get?disableCache=true&url=';
 
 const fetchRSS = async (url) => {
   try {
-    const apiUrl = `${proxy}${encodeURIComponent(url)}`;
-    const response = await axios.get(apiUrl);
+    const apiUrl = new URL(PROXY_URL);
+    apiUrl.searchParams.append('url', url);
 
-    if (response.status !== 200) {
-      throw new Error(`Ошибка загрузки: ${response.statusText}`);
+    const response = await axios.get(apiUrl.toString());
+
+    if (!response.data || !response.data.contents) {
+      throw new Error('Ошибка загрузки RSS');
     }
 
     return response.data.contents;
