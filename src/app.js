@@ -1,7 +1,7 @@
 import i18next from 'i18next';
 import onChange from 'on-change';
 import validateUrl from './validation.js';
-import { initView, showModal } from './view.js';
+import { initView, showModal, resetInputField } from './view.js';
 import { fetchRSS, parseRSS } from './api/rssParser.js';
 
 export default () => {
@@ -19,7 +19,6 @@ export default () => {
     posts: [],
     readPosts: new Set(),
     feedAddingStatus: 'idle',
-    modalPost: null,
   };
 
   const elements = {
@@ -28,8 +27,6 @@ export default () => {
     feedback: document.querySelector('.feedback'),
     postsContainer: document.querySelector('.posts'),
   };
-
-  let watchedState;
 
   const renderPosts = () => {
     elements.postsContainer.innerHTML = state.posts
@@ -50,20 +47,14 @@ export default () => {
       button.addEventListener('click', (e) => {
         const { index } = e.target.dataset;
         const post = state.posts[index];
-        watchedState.modalPost = post;
-        watchedState.readPosts.add(post.link);
+        showModal(post.title, post.description, post.link);
+        state.readPosts.add(post.link);
       });
     });
   };
 
-  watchedState = onChange(state, (path, value) => {
-    if (path.startsWith('posts') || path === 'readPosts') {
-      renderPosts();
-    }
-    if (path === 'modalPost' && value) {
-      showModal(value.title, value.description, value.link);
-      watchedState.modalPost = null;
-    }
+  const watchedState = onChange(state, (path) => {
+    if (path.startsWith('posts') || path === 'readPosts') renderPosts();
   });
 
   const updateFeeds = async () => {
@@ -108,8 +99,8 @@ export default () => {
 
       watchedState.form.error = null;
       watchedState.feedAddingStatus = 'success';
-      elements.input.value = '';
-      elements.input.focus();
+
+      resetInputField(elements);
 
       if (watchedState.feeds.length === 1) updateFeeds();
     } catch (error) {
