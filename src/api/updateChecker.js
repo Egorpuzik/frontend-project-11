@@ -2,7 +2,7 @@ import axios from 'axios';
 
 export const fetchRSS = async (url) => {
   try {
-    const proxyUrl = new URL('https://api.allorigins.win/get');
+    const proxyUrl = new URL('https://allorigins.hexlet.app/get');
     proxyUrl.searchParams.set('url', url);
 
     const response = await axios.get(proxyUrl.toString());
