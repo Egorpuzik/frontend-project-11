@@ -14,17 +14,19 @@ const loadTranslations = async () => {
       }),
     ]);
 
-    return i18next
-      .use(LanguageDetector)
-      .init({
-        resources: {
-          en: { translation: en },
-          ru: { translation: ru },
-        },
-        fallbackLng: 'en',
-        debug: true,
-        interpolation: { escapeValue: false },
-      });
+    if (!i18next.isInitialized) {
+      return i18next
+        .use(LanguageDetector)
+        .init({
+          resources: {
+            en: { translation: en },
+            ru: { translation: ru },
+          },
+          fallbackLng: 'en',
+          debug: true,
+          interpolation: { escapeValue: false },
+        });
+    }
   } catch (error) {
     console.error('Ошибка при загрузке переводов:', error);
     return i18next.init({

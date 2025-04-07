@@ -3,6 +3,7 @@ import onChange from 'on-change';
 import validateUrl from './validation.js';
 import { initView, showModal, resetInputField } from './view.js';
 import parseRSS from './api/rssParser.js';
+import fetchRSS from './api/fetchRSS.js';
 
 export default () => {
   i18next.init({
