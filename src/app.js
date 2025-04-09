@@ -20,6 +20,7 @@ export default () => {
     posts: [],
     readPosts: new Set(),
     feedAddingStatus: 'idle',
+    modal: { title: '', description: '', link: null },
   };
 
   const elements = {
@@ -29,18 +30,36 @@ export default () => {
     postsContainer: document.querySelector('.posts'),
   };
 
+  const watchedState = onChange(state, (path) => {
+    if (path.startsWith('posts') || path === 'readPosts') {
+      renderPosts();
+    } else if (path === 'modal') {
+      const { title, description, link } = watchedState.modal;
+      if (link) showModal(title, description, link);
+    }
+  });
+
   const renderPosts = () => {
     elements.postsContainer.innerHTML = state.posts
       .map((post, index) => {
         const isRead = state.readPosts.has(post.link);
-        return `
-          <div class="post ${isRead ? 'fw-normal' : 'fw-bold'}">
-            <a href="${post.link}" target="_blank">${post.title}</a>
-            <button class="btn btn-link preview-btn" data-index="${index}">
-              ${i18next.t('preview')}
-            </button>
-          </div>
-        `;
+        const postTitle = document.createElement('a');
+        postTitle.href = post.link;
+        postTitle.target = '_blank';
+        postTitle.textContent = post.title;
+
+        const previewButton = document.createElement('button');
+        previewButton.classList.add('btn', 'btn-link', 'preview-btn');
+        previewButton.dataset.index = index;
+        previewButton.textContent = i18next.t('preview');
+
+        const postContainer = document.createElement('div');
+        postContainer.classList.add('post');
+        postContainer.classList.add(isRead ? 'fw-normal' : 'fw-bold');
+        postContainer.appendChild(postTitle);
+        postContainer.appendChild(previewButton);
+
+        return postContainer.outerHTML;
       })
       .join('');
 
@@ -48,15 +67,12 @@ export default () => {
       button.addEventListener('click', (e) => {
         const { index } = e.target.dataset;
         const post = state.posts[index];
-        showModal(post.title, post.description, post.link);
-        state.readPosts.add(post.link);
+
+        watchedState.modal = { title: post.title, description: post.description, link: post.link };
+        watchedState.readPosts.add(post.link);
       });
     });
   };
-
-  const watchedState = onChange(state, (path) => {
-    if (path.startsWith('posts') || path === 'readPosts') renderPosts();
-  });
 
   const updateFeeds = async () => {
     if (watchedState.feeds.length === 0) {
@@ -64,31 +80,27 @@ export default () => {
       return null;
     }
 
-    await Promise.all(watchedState.feeds.map(async (feed) => {
-      try {
-        const xmlDoc = await fetchRSS(feed.link);
-        const { posts } = parseRSS(xmlDoc);
+    await Promise.all(
+      watchedState.feeds.map(async (feed) => {
+        try {
+          const xmlDoc = await fetchRSS(feed.link);
+          const { posts } = parseRSS(xmlDoc);
 
-        const existingLinks = new Set(watchedState.posts.map((p) => p.link));
-        const newPosts = posts.filter((post) => !existingLinks.has(post.link));
+          const existingLinks = new Set(watchedState.posts.map((p) => p.link));
+          const newPosts = posts.filter((post) => !existingLinks.has(post.link));
 
-        if (newPosts.length > 0) watchedState.posts.push(...newPosts);
-      } catch (error) {
-        console.error(`Ошибка обновления фида ${feed.link}:`, error);
-      }
-    }));
+          if (newPosts.length > 0) watchedState.posts.push(...newPosts);
+        } catch (error) {
+          console.error(`Ошибка обновления фида ${feed.link}:`, error);
+        }
+      }),
+    );
 
     setTimeout(updateFeeds, 5000);
     return null;
   };
 
   const addFeed = async (url) => {
-    if (watchedState.feeds.some((feed) => feed.link === url)) {
-      watchedState.form.error = i18next.t('rssExists');
-      watchedState.feedAddingStatus = 'error';
-      return;
-    }
-
     watchedState.feedAddingStatus = 'pending';
 
     try {

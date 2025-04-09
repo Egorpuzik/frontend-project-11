@@ -14,34 +14,24 @@ const loadTranslations = async () => {
       }),
     ]);
 
-    if (!i18next.isInitialized) {
-      return i18next
-        .use(LanguageDetector)
-        .init({
-          resources: {
-            en: { translation: en },
-            ru: { translation: ru },
-          },
-          fallbackLng: 'en',
-          debug: true,
-          interpolation: { escapeValue: false },
-        });
-    }
+    return { en, ru };
   } catch (error) {
     console.error('Ошибка при загрузке переводов:', error);
-    return i18next.init({
-      lng: 'en',
-      fallbackLng: 'en',
-      resources: {
-        en: {
-          translation: {
-            error: 'Ошибка загрузки переводов',
-          },
-        },
-      },
-    });
+    return null;
   }
 };
 
-export const i18nPromise = loadTranslations();
-export default i18next;
+export default async () => {
+  const translations = await loadTranslations();
+
+  await i18next
+    .use(LanguageDetector)
+    .init({
+      resources: translations || {
+        en: { translation: { error: 'Ошибка загрузки переводов' } },
+      },
+      fallbackLng: 'en',
+      debug: true,
+      interpolation: { escapeValue: false },
+    });
+};
