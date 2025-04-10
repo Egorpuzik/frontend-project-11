@@ -30,14 +30,7 @@ export default () => {
     postsContainer: document.querySelector('.posts'),
   };
 
-  const watchedState = onChange(state, (path) => {
-    if (path.startsWith('posts') || path === 'readPosts') {
-      renderPosts();
-    } else if (path === 'modal') {
-      const { title, description, link } = watchedState.modal;
-      if (link) showModal(title, description, link);
-    }
-  });
+  let watchedState;
 
   const renderPosts = () => {
     elements.postsContainer.innerHTML = state.posts
@@ -73,6 +66,15 @@ export default () => {
       });
     });
   };
+
+  watchedState = onChange(state, (path) => {
+    if (path.startsWith('posts') || path === 'readPosts') {
+      renderPosts();
+    } else if (path === 'modal') {
+      const { title, description, link } = watchedState.modal;
+      if (link) showModal(title, description, link);
+    }
+  });
 
   const updateFeeds = async () => {
     if (watchedState.feeds.length === 0) {
