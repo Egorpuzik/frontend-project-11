@@ -2,9 +2,10 @@ import { Modal } from 'bootstrap';
 import onChange from 'on-change';
 
 const renderError = (input, feedback, error) => {
-  const feedbackElement = feedback;
-  input.classList.toggle('is-invalid', !!error);
+  const feedbackElement = feedback.cloneNode(true);
   feedbackElement.textContent = error || '';
+  input.classList.toggle('is-invalid', !!error);
+  feedback.replaceWith(feedbackElement);
 };
 
 const createList = (items, createItem) => {
@@ -15,29 +16,36 @@ const createList = (items, createItem) => {
   return list;
 };
 
-const renderFeeds = (container, feeds) => {
-  const feedsContainer = container;
-  feedsContainer.innerHTML = '';
+const renderFeeds = (feedsContainer, feeds) => {
+  const newContainer = feedsContainer.cloneNode(false);
   const list = createList(feeds, ({ title, description }) => {
     const item = document.createElement('li');
     item.classList.add('list-group-item');
     item.innerHTML = `<h3>${title}</h3><p>${description}</p>`;
     return item;
   });
-  if (list) feedsContainer.appendChild(list);
+
+  if (list) newContainer.appendChild(list);
+  feedsContainer.replaceWith(newContainer);
 };
 
 export const showModal = (title, description, link) => {
-  const modal = new Modal(document.getElementById('modal'));
+  const modalElement = document.getElementById('modal');
+  if (!modalElement) {
+    console.error('Modal element not found');
+    return;
+  }
+
   document.querySelector('.modal-title').textContent = title;
   document.querySelector('.modal-body').textContent = description;
   document.querySelector('.full-article').href = link;
+
+  const modal = new Modal(modalElement);
   modal.show();
 };
 
-const renderPosts = (container, posts, readPosts) => {
-  const postsContainer = container;
-  postsContainer.innerHTML = '';
+const renderPosts = (postsContainer, posts, readPosts) => {
+  const newContainer = postsContainer.cloneNode(false);
   const list = createList(posts, ({ title, link }) => {
     const item = document.createElement('li');
     item.classList.add('list-group-item', 'd-flex', 'justify-content-between');
@@ -61,13 +69,16 @@ const renderPosts = (container, posts, readPosts) => {
     item.append(postLink, previewBtn);
     return item;
   });
-  if (list) postsContainer.appendChild(list);
+
+  if (list) newContainer.appendChild(list);
+  postsContainer.replaceWith(newContainer);
 };
 
-export const resetInputField = (field) => {
-  const input = field;
-  input.value = '';
-  input.focus();
+export const resetInputField = (input) => {
+  const newInput = input.cloneNode(true);
+  newInput.value = '';
+  newInput.focus();
+  input.replaceWith(newInput);
 };
 
 export const initView = (state, elements) => onChange(state, (path) => {

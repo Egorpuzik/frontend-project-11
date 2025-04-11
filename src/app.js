@@ -6,14 +6,6 @@ import parseRSS from './api/rssParser.js';
 import fetchRSS from './api/fetchRSS.js';
 
 export default () => {
-  i18next.init({
-    lng: 'ru',
-    resources: {
-      ru: { translation: { preview: 'Предпросмотр', rssExists: 'RSS уже существует', noTitle: 'Без названия' } },
-      en: { translation: { preview: 'Preview', rssExists: 'RSS already exists', noTitle: 'No title' } },
-    },
-  });
-
   const state = {
     form: { error: null },
     feeds: [],
@@ -30,8 +22,6 @@ export default () => {
     postsContainer: document.querySelector('.posts'),
   };
 
-  let watchedState;
-
   const renderPosts = () => {
     elements.postsContainer.innerHTML = state.posts
       .map((post, index) => {
@@ -40,6 +30,7 @@ export default () => {
         postTitle.href = post.link;
         postTitle.target = '_blank';
         postTitle.textContent = post.title;
+        postTitle.classList.toggle('fw-bold', !isRead);
 
         const previewButton = document.createElement('button');
         previewButton.classList.add('btn', 'btn-link', 'preview-btn');
@@ -47,10 +38,8 @@ export default () => {
         previewButton.textContent = i18next.t('preview');
 
         const postContainer = document.createElement('div');
-        postContainer.classList.add('post');
-        postContainer.classList.add(isRead ? 'fw-normal' : 'fw-bold');
-        postContainer.appendChild(postTitle);
-        postContainer.appendChild(previewButton);
+        postContainer.classList.add('post', isRead ? 'fw-normal' : 'fw-bold');
+        postContainer.append(postTitle, previewButton);
 
         return postContainer.outerHTML;
       })
@@ -61,19 +50,27 @@ export default () => {
         const { index } = e.target.dataset;
         const post = state.posts[index];
 
-        watchedState.modal = { title: post.title, description: post.description, link: post.link };
-        watchedState.readPosts.add(post.link);
+        state.modal = { title: post.title, description: post.description, link: post.link };
+        state.readPosts = new Set([...state.readPosts, post.link]);
       });
     });
   };
 
-  watchedState = onChange(state, (path) => {
+  const watchedState = onChange(state, (path, value) => {
     if (path.startsWith('posts') || path === 'readPosts') {
       renderPosts();
     } else if (path === 'modal') {
-      const { title, description, link } = watchedState.modal;
+      const { title, description, link } = value;
       if (link) showModal(title, description, link);
     }
+  });
+
+  i18next.init({
+    lng: 'ru',
+    resources: {
+      ru: { translation: { preview: 'Предпросмотр', rssExists: 'RSS уже существует', noTitle: 'Без названия' } },
+      en: { translation: { preview: 'Preview', rssExists: 'RSS already exists', noTitle: 'No title' } },
+    },
   });
 
   const updateFeeds = async () => {
@@ -115,7 +112,7 @@ export default () => {
       watchedState.form.error = null;
       watchedState.feedAddingStatus = 'success';
 
-      resetInputField(elements);
+      resetInputField(elements.input);
 
       if (watchedState.feeds.length === 1) updateFeeds();
     } catch (error) {
