@@ -50,7 +50,9 @@ export default () => {
         const { index } = e.target.dataset;
         const post = state.posts[index];
 
+        // eslint-disable-next-line no-use-before-define
         state.modal = { title: post.title, description: post.description, link: post.link };
+        // eslint-disable-next-line no-use-before-define
         state.readPosts = new Set([...state.readPosts, post.link]);
       });
     });
