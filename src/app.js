@@ -50,9 +50,7 @@ export default () => {
         const { index } = e.target.dataset;
         const post = state.posts[index];
 
-        // eslint-disable-next-line no-use-before-define
         state.modal = { title: post.title, description: post.description, link: post.link };
-        // eslint-disable-next-line no-use-before-define
         state.readPosts = new Set([...state.readPosts, post.link]);
       });
     });
@@ -70,8 +68,22 @@ export default () => {
   i18next.init({
     lng: 'ru',
     resources: {
-      ru: { translation: { preview: 'Предпросмотр', rssExists: 'RSS уже существует', noTitle: 'Без названия' } },
-      en: { translation: { preview: 'Preview', rssExists: 'RSS already exists', noTitle: 'No title' } },
+      ru: {
+        translation: {
+          preview: 'Предпросмотр',
+          rssExists: 'RSS уже существует',
+          noTitle: 'Без названия',
+          rssLoaded: 'RSS успешно загружен',
+        },
+      },
+      en: {
+        translation: {
+          preview: 'Preview',
+          rssExists: 'RSS already exists',
+          noTitle: 'No title',
+          rssLoaded: 'RSS successfully loaded',
+        },
+      },
     },
   });
 
@@ -114,12 +126,20 @@ export default () => {
       watchedState.form.error = null;
       watchedState.feedAddingStatus = 'success';
 
+      elements.feedback.textContent = i18next.t('rssLoaded');
+      elements.feedback.classList.remove('text-danger');
+      elements.feedback.classList.add('text-success');
+
       resetInputField(elements.input);
 
       if (watchedState.feeds.length === 1) updateFeeds();
     } catch (error) {
       watchedState.form.error = error.message;
       watchedState.feedAddingStatus = 'error';
+
+      elements.feedback.textContent = error.message;
+      elements.feedback.classList.remove('text-success');
+      elements.feedback.classList.add('text-danger');
     }
   };
 
@@ -132,6 +152,10 @@ export default () => {
       .catch((err) => {
         watchedState.form.error = err.message;
         watchedState.feedAddingStatus = 'error';
+
+        elements.feedback.textContent = err.message;
+        elements.feedback.classList.remove('text-success');
+        elements.feedback.classList.add('text-danger');
       });
   });
 
