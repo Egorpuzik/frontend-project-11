@@ -19,53 +19,69 @@ export default () => {
     form: document.querySelector('form'),
     input: document.querySelector('input'),
     feedback: document.querySelector('.feedback'),
+    feedsContainer: document.querySelector('.feeds'),
     postsContainer: document.querySelector('.posts'),
   };
 
+  const renderFeeds = () => {
+    elements.feedsContainer.innerHTML = `
+      <h2>${i18next.t('feeds')}</h2>
+      <ul class="list-group mb-3">
+        ${state.feeds.map((feed) => `
+          <li class="list-group-item">
+            <h3 class="h6">${feed.title}</h3>
+          </li>
+        `).join('')}
+      </ul>
+    `;
+  };
+
   const renderPosts = () => {
-    elements.postsContainer.innerHTML = state.posts
-      .map((post, index) => {
-        const isRead = state.readPosts.has(post.link);
-        const postTitle = document.createElement('a');
-        postTitle.href = post.link;
-        postTitle.target = '_blank';
-        postTitle.textContent = post.title;
-        postTitle.classList.toggle('fw-bold', !isRead);
+    elements.postsContainer.innerHTML = `
+      <h2>${i18next.t('posts')}</h2>
+      <ul class="list-group">
+        ${state.posts.map((post, index) => {
+    const isRead = state.readPosts.has(post.link);
+    return `
+            <li class="list-group-item d-flex justify-content-between align-items-start">
+              <a href="${post.link}" class="${isRead ? 'fw-normal' : 'fw-bold'}" target="_blank">${post.title}</a>
+              <button type="button" class="btn btn-outline-primary btn-sm preview-btn" data-index="${index}">
+                ${i18next.t('preview')}
+              </button>
+            </li>
+          `;
+  }).join('')}
+      </ul>
+    `;
+  };
 
-        const previewButton = document.createElement('button');
-        previewButton.classList.add('btn', 'btn-link', 'preview-btn');
-        previewButton.dataset.index = index;
-        previewButton.textContent = i18next.t('preview');
+  const renderFeedback = (message, type = 'success') => {
+    elements.feedback.textContent = message;
+    elements.feedback.classList.remove('text-success', 'text-danger');
 
-        const postContainer = document.createElement('div');
-        postContainer.classList.add('post', isRead ? 'fw-normal' : 'fw-bold');
-        postContainer.append(postTitle, previewButton);
-
-        return postContainer.outerHTML;
-      })
-      .join('');
-
-    document.querySelectorAll('.preview-btn').forEach((button) => {
-      button.addEventListener('click', (e) => {
-        const { index } = e.target.dataset;
-        const post = state.posts[index];
-
-        state.modal = {
-          title: post.title,
-          description: post.description,
-          link: post.link,
-        };
-        state.readPosts = new Set([...state.readPosts, post.link]);
-      });
-    });
+    if (type === 'success') {
+      elements.feedback.classList.add('text-success');
+    } else {
+      elements.feedback.classList.add('text-danger');
+    }
   };
 
   const watchedState = onChange(state, (path, value) => {
-    if (path.startsWith('posts') || path === 'readPosts') {
-      renderPosts();
-    } else if (path === 'modal') {
-      const { title, description, link } = value;
-      if (link) showModal(title, description, link);
+    switch (path) {
+      case 'feeds':
+        renderFeeds();
+        break;
+      case 'posts':
+      case 'readPosts':
+        renderPosts();
+        break;
+      case 'modal': {
+        const { title, description, link } = value;
+        if (link) showModal(title, description, link);
+        break;
+      }
+      default:
+        break;
     }
   });
 
@@ -78,14 +94,10 @@ export default () => {
           rssExists: 'RSS уже существует',
           noTitle: 'Без названия',
           rssLoaded: 'RSS успешно загружен',
-        },
-      },
-      en: {
-        translation: {
-          preview: 'Preview',
-          rssExists: 'RSS already exists',
-          noTitle: 'No title',
-          rssLoaded: 'RSS successfully loaded',
+          feeds: 'Фиды',
+          posts: 'Посты',
+          parseError: 'Ошибка парсинга RSS',
+          networkError: 'Ошибка сети',
         },
       },
     },
@@ -94,7 +106,7 @@ export default () => {
   const updateFeeds = async () => {
     if (watchedState.feeds.length === 0) {
       setTimeout(updateFeeds, 5000);
-      return null;
+      return;
     }
 
     await Promise.all(
@@ -114,7 +126,6 @@ export default () => {
     );
 
     setTimeout(updateFeeds, 5000);
-    return null;
   };
 
   const addFeed = async (url) => {
@@ -124,10 +135,7 @@ export default () => {
     if (feedExists) {
       watchedState.form.error = i18next.t('rssExists');
       watchedState.feedAddingStatus = 'error';
-
-      elements.feedback.textContent = watchedState.form.error;
-      elements.feedback.classList.remove('text-success');
-      elements.feedback.classList.add('text-danger');
+      renderFeedback(watchedState.form.error, 'error');
       return;
     }
 
@@ -144,20 +152,18 @@ export default () => {
       watchedState.form.error = null;
       watchedState.feedAddingStatus = 'success';
 
-      elements.feedback.textContent = i18next.t('rssLoaded');
-      elements.feedback.classList.remove('text-danger');
-      elements.feedback.classList.add('text-success');
-
+      renderFeedback(i18next.t('rssLoaded'), 'success');
       resetInputField(elements.input);
 
       if (watchedState.feeds.length === 1) updateFeeds();
     } catch (error) {
-      watchedState.form.error = error.message;
+      const errorKey = error.message === 'ParseError' ? 'parseError' : 'networkError';
+      const message = i18next.t(errorKey);
+
+      watchedState.form.error = message;
       watchedState.feedAddingStatus = 'error';
 
-      elements.feedback.textContent = error.message;
-      elements.feedback.classList.remove('text-success');
-      elements.feedback.classList.add('text-danger');
+      renderFeedback(message, 'error');
     }
   };
 
@@ -170,11 +176,23 @@ export default () => {
       .catch((err) => {
         watchedState.form.error = err.message;
         watchedState.feedAddingStatus = 'error';
-
-        elements.feedback.textContent = err.message;
-        elements.feedback.classList.remove('text-success');
-        elements.feedback.classList.add('text-danger');
+        renderFeedback(err.message, 'error');
       });
+  });
+
+  elements.postsContainer.addEventListener('click', (e) => {
+    if (e.target.classList.contains('preview-btn')) {
+      const { index } = e.target.dataset;
+      const post = watchedState.posts[index];
+
+      watchedState.modal = {
+        title: post.title,
+        description: post.description,
+        link: post.link,
+      };
+
+      watchedState.readPosts.add(post.link);
+    }
   });
 
   initView(state, elements);
