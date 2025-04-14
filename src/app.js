@@ -93,7 +93,7 @@ export default () => {
           rssLoaded: 'RSS успешно загружен',
           feeds: 'Фиды',
           posts: 'Посты',
-          parseError: 'Ошибка парсинга RSS',
+          parseError: 'Ресурс не содержит валидный RSS',
           networkError: 'Ошибка сети',
           invalidUrl: 'Ссылка должна быть валидным URL',
           required: 'Не должно быть пустым',
@@ -137,7 +137,6 @@ export default () => {
     try {
       const xml = await fetchRSS(url);
       const { feed, posts } = parseRSS(xml);
-
       watchedState.feeds.push({
         title: feed.title || i18next.t('noTitle'),
         link: url,
