@@ -44,7 +44,9 @@ export default () => {
     const isRead = state.readPosts.has(post.link);
     return `
             <li class="list-group-item d-flex justify-content-between align-items-start">
-              <a href="${post.link}" class="${isRead ? 'fw-normal' : 'fw-bold'}" target="_blank">${post.title}</a>
+              <a href="${post.link}" class="${isRead ? 'fw-normal' : 'fw-bold'}" target="_blank" rel="noopener noreferrer">
+                ${post.title}
+              </a>
               <button type="button" class="btn btn-outline-primary btn-sm preview-btn" data-index="${index}">
                 ${i18next.t('preview')}
               </button>
@@ -58,12 +60,7 @@ export default () => {
   const renderFeedback = (message, type = 'success') => {
     elements.feedback.textContent = message;
     elements.feedback.classList.remove('text-success', 'text-danger');
-
-    if (type === 'success') {
-      elements.feedback.classList.add('text-success');
-    } else {
-      elements.feedback.classList.add('text-danger');
-    }
+    elements.feedback.classList.add(type === 'success' ? 'text-success' : 'text-danger');
   };
 
   const watchedState = onChange(state, (path, value) => {
@@ -98,32 +95,35 @@ export default () => {
           posts: 'Посты',
           parseError: 'Ошибка парсинга RSS',
           networkError: 'Ошибка сети',
+          invalidUrl: 'Ссылка должна быть валидным URL',
+          required: 'Не должно быть пустым',
         },
       },
     },
   });
 
   const updateFeeds = async () => {
-    if (watchedState.feeds.length === 0) {
+    const { feeds, posts } = watchedState;
+    if (feeds.length === 0) {
       setTimeout(updateFeeds, 5000);
       return;
     }
 
-    await Promise.all(
-      watchedState.feeds.map(async (feed) => {
-        try {
-          const xmlDoc = await fetchRSS(feed.link);
-          const { posts } = parseRSS(xmlDoc);
+    await Promise.all(feeds.map(async (feed) => {
+      try {
+        const xml = await fetchRSS(feed.link);
+        const { posts: newPosts } = parseRSS(xml);
 
-          const existingLinks = new Set(watchedState.posts.map((p) => p.link));
-          const newPosts = posts.filter((post) => !existingLinks.has(post.link));
+        const existingLinks = new Set(posts.map((post) => post.link));
+        const freshPosts = newPosts.filter((p) => !existingLinks.has(p.link));
 
-          if (newPosts.length > 0) watchedState.posts.push(...newPosts);
-        } catch (error) {
-          console.error(`Ошибка обновления фида ${feed.link}:`, error);
+        if (freshPosts.length > 0) {
+          watchedState.posts.push(...freshPosts);
         }
-      }),
-    );
+      } catch (err) {
+        console.error(`Ошибка обновления RSS: ${feed.link}`, err);
+      }
+    }));
 
     setTimeout(updateFeeds, 5000);
   };
@@ -131,38 +131,39 @@ export default () => {
   const addFeed = async (url) => {
     watchedState.feedAddingStatus = 'pending';
 
-    const feedExists = watchedState.feeds.some((feed) => feed.link === url);
-    if (feedExists) {
-      watchedState.form.error = i18next.t('rssExists');
+    const alreadyExists = watchedState.feeds.some((feed) => feed.link === url);
+    if (alreadyExists) {
+      const message = i18next.t('rssExists');
+      watchedState.form.error = message;
       watchedState.feedAddingStatus = 'error';
-      renderFeedback(watchedState.form.error, 'error');
+      renderFeedback(message, 'error');
       return;
     }
 
     try {
-      const xmlDoc = await fetchRSS(url);
-      const { feed, posts } = parseRSS(xmlDoc);
+      const xml = await fetchRSS(url);
+      const { feed, posts } = parseRSS(xml);
 
       watchedState.feeds.push({
         title: feed.title || i18next.t('noTitle'),
         link: url,
       });
-      watchedState.posts.push(...posts);
 
-      watchedState.form.error = null;
+      watchedState.posts.push(...posts);
       watchedState.feedAddingStatus = 'success';
+      watchedState.form.error = null;
 
       renderFeedback(i18next.t('rssLoaded'), 'success');
       resetInputField(elements.input);
 
-      if (watchedState.feeds.length === 1) updateFeeds();
+      if (watchedState.feeds.length === 1) {
+        updateFeeds();
+      }
     } catch (error) {
-      const errorKey = error.message === 'ParseError' ? 'parseError' : 'networkError';
-      const message = i18next.t(errorKey);
-
+      const key = error.message === 'ParseError' ? 'parseError' : 'networkError';
+      const message = i18next.t(key);
       watchedState.form.error = message;
       watchedState.feedAddingStatus = 'error';
-
       renderFeedback(message, 'error');
     }
   };
@@ -174,9 +175,10 @@ export default () => {
     validateUrl(url, watchedState.feeds)
       .then(() => addFeed(url))
       .catch((err) => {
-        watchedState.form.error = err.message;
+        const message = i18next.t(err.message) || err.message;
+        watchedState.form.error = message;
         watchedState.feedAddingStatus = 'error';
-        renderFeedback(err.message, 'error');
+        renderFeedback(message, 'error');
       });
   });
 
@@ -185,13 +187,12 @@ export default () => {
       const { index } = e.target.dataset;
       const post = watchedState.posts[index];
 
+      watchedState.readPosts.add(post.link);
       watchedState.modal = {
         title: post.title,
         description: post.description,
         link: post.link,
       };
-
-      watchedState.readPosts.add(post.link);
     }
   });
 
