@@ -1,7 +1,7 @@
 import i18next from 'i18next';
 import onChange from 'on-change';
 import validateUrl from './validation.js';
-import { initView, resetInputField } from './view.js';
+import { initView, showModal, resetInputField } from './view.js';
 import parseRSS from './api/rssParser.js';
 import fetchRSS from './api/fetchRSS.js';
 
@@ -20,17 +20,6 @@ export default () => {
     feedback: document.querySelector('.feedback'),
     feedsContainer: document.querySelector('.feeds'),
     postsContainer: document.querySelector('.posts'),
-    modal: document.querySelector('#modal'),
-    modalTitle: document.querySelector('#modal-title'),
-    modalDescription: document.querySelector('#modal-description'),
-    modalLink: document.querySelector('#modal-link'),
-  };
-
-  const showModal = (title, description, link) => {
-    elements.modalTitle.textContent = title;
-    elements.modalDescription.textContent = description;
-    elements.modalLink.href = link;
-    elements.modal.classList.add('show');
   };
 
   const renderFeeds = () => {
@@ -130,7 +119,7 @@ export default () => {
         if (freshPosts.length > 0) {
           watchedState.posts.push(...freshPosts);
         }
-      } catch {
+      } catch (error) {
         renderFeedback(i18next.t('networkError'), 'error');
       }
     }));
@@ -194,14 +183,8 @@ export default () => {
     };
   };
 
-  const closeModal = () => {
-    elements.modal.classList.remove('show');
-  };
-
   elements.form.addEventListener('submit', handleFormSubmit);
   elements.postsContainer.addEventListener('click', handlePostClick);
-
-  elements.modal.addEventListener('click', closeModal);
 
   initView(state, elements);
 };
