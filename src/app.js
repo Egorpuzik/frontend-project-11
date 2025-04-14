@@ -11,7 +11,6 @@ export default () => {
     feeds: [],
     posts: [],
     readPosts: new Set(),
-    feedAddingStatus: 'idle',
     modal: { title: '', description: '', link: null },
   };
 
@@ -72,11 +71,9 @@ export default () => {
       case 'readPosts':
         renderPosts();
         break;
-      case 'modal': {
-        const { title, description, link } = value;
-        if (link) showModal(title, description, link);
+      case 'modal':
+        if (value.link) showModal(value.title, value.description, value.link);
         break;
-      }
       case 'form.error':
         renderFeedback(value, 'error');
         break;
@@ -106,25 +103,24 @@ export default () => {
   });
 
   const updateFeeds = async () => {
-    const { feeds, posts } = watchedState;
-    if (feeds.length === 0) {
+    if (watchedState.feeds.length === 0) {
       setTimeout(updateFeeds, 5000);
       return;
     }
 
-    await Promise.all(feeds.map(async (feed) => {
+    await Promise.all(watchedState.feeds.map(async (feed) => {
       try {
         const xml = await fetchRSS(feed.link);
         const { posts: newPosts } = parseRSS(xml);
 
-        const existingLinks = new Set(posts.map((post) => post.link));
-        const freshPosts = newPosts.filter((p) => !existingLinks.has(p.link));
+        const existingLinks = new Set(watchedState.posts.map((post) => post.link));
+        const freshPosts = newPosts.filter((post) => !existingLinks.has(post.link));
 
         if (freshPosts.length > 0) {
           watchedState.posts.push(...freshPosts);
         }
-      } catch (err) {
-        console.error(`Ошибка обновления RSS: ${feed.link}`, err);
+      } catch {
+        renderFeedback(i18next.t('networkError'), 'error');
       }
     }));
 
@@ -132,13 +128,9 @@ export default () => {
   };
 
   const addFeed = async (url) => {
-    watchedState.feedAddingStatus = 'pending';
-
     const alreadyExists = watchedState.feeds.some((feed) => feed.link === url);
     if (alreadyExists) {
-      const message = i18next.t('rssExists');
-      watchedState.form.error = message;
-      watchedState.feedAddingStatus = 'error';
+      watchedState.form.error = i18next.t('rssExists');
       return;
     }
 
@@ -152,10 +144,9 @@ export default () => {
       });
 
       watchedState.posts.push(...posts);
-      watchedState.feedAddingStatus = 'success';
       watchedState.form.error = null;
 
-      renderFeedback(i18next.t('rssLoaded'), 'success');
+      renderFeedback(i18next.t('rssLoaded'));
       resetInputField(elements.input);
 
       if (watchedState.feeds.length === 1) {
@@ -163,38 +154,38 @@ export default () => {
       }
     } catch (error) {
       const key = error.message === 'ParseError' ? 'parseError' : 'networkError';
-      const message = i18next.t(key);
-      watchedState.form.error = message;
-      watchedState.feedAddingStatus = 'error';
+      watchedState.form.error = i18next.t(key);
     }
   };
 
-  elements.form.addEventListener('submit', (e) => {
-    e.preventDefault();
+  const handleFormSubmit = (event) => {
+    event.preventDefault();
     const url = elements.input.value.trim();
 
     validateUrl(url, watchedState.feeds)
       .then(() => addFeed(url))
-      .catch((err) => {
-        const message = i18next.t(err.message) || err.message;
+      .catch((error) => {
+        const message = i18next.t(error.message) || error.message;
         watchedState.form.error = message;
-        watchedState.feedAddingStatus = 'error';
       });
-  });
+  };
 
-  elements.postsContainer.addEventListener('click', (e) => {
-    if (e.target.classList.contains('preview-btn')) {
-      const { index } = e.target.dataset;
-      const post = watchedState.posts[index];
+  const handlePostClick = (event) => {
+    if (!event.target.classList.contains('preview-btn')) return;
 
-      watchedState.readPosts.add(post.link);
-      watchedState.modal = {
-        title: post.title,
-        description: post.description,
-        link: post.link,
-      };
-    }
-  });
+    const { index } = event.target.dataset;
+    const post = watchedState.posts[index];
+
+    watchedState.readPosts.add(post.link);
+    watchedState.modal = {
+      title: post.title,
+      description: post.description,
+      link: post.link,
+    };
+  };
+
+  elements.form.addEventListener('submit', handleFormSubmit);
+  elements.postsContainer.addEventListener('click', handlePostClick);
 
   initView(state, elements);
 };
