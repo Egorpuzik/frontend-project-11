@@ -60,7 +60,7 @@ export default () => {
   const renderFeedback = (message, type = 'success') => {
     elements.feedback.textContent = message;
     elements.feedback.classList.remove('text-success', 'text-danger');
-    elements.feedback.classList.add(type === 'success' ? 'text-success' : 'text-danger');
+    elements.feedback.classList.add(type === 'error' ? 'text-danger' : 'text-success');
   };
 
   const watchedState = onChange(state, (path, value) => {
@@ -77,6 +77,9 @@ export default () => {
         if (link) showModal(title, description, link);
         break;
       }
+      case 'form.error':
+        renderFeedback(value, 'error');
+        break;
       default:
         break;
     }
@@ -136,7 +139,6 @@ export default () => {
       const message = i18next.t('rssExists');
       watchedState.form.error = message;
       watchedState.feedAddingStatus = 'error';
-      renderFeedback(message, 'error');
       return;
     }
 
@@ -164,7 +166,6 @@ export default () => {
       const message = i18next.t(key);
       watchedState.form.error = message;
       watchedState.feedAddingStatus = 'error';
-      renderFeedback(message, 'error');
     }
   };
 
@@ -178,7 +179,6 @@ export default () => {
         const message = i18next.t(err.message) || err.message;
         watchedState.form.error = message;
         watchedState.feedAddingStatus = 'error';
-        renderFeedback(message, 'error');
       });
   });
 
