@@ -50,7 +50,11 @@ export default () => {
         const { index } = e.target.dataset;
         const post = state.posts[index];
 
-        state.modal = { title: post.title, description: post.description, link: post.link };
+        state.modal = {
+          title: post.title,
+          description: post.description,
+          link: post.link,
+        };
         state.readPosts = new Set([...state.readPosts, post.link]);
       });
     });
@@ -116,11 +120,25 @@ export default () => {
   const addFeed = async (url) => {
     watchedState.feedAddingStatus = 'pending';
 
+    const feedExists = watchedState.feeds.some((feed) => feed.link === url);
+    if (feedExists) {
+      watchedState.form.error = i18next.t('rssExists');
+      watchedState.feedAddingStatus = 'error';
+
+      elements.feedback.textContent = watchedState.form.error;
+      elements.feedback.classList.remove('text-success');
+      elements.feedback.classList.add('text-danger');
+      return;
+    }
+
     try {
       const xmlDoc = await fetchRSS(url);
       const { feed, posts } = parseRSS(xmlDoc);
 
-      watchedState.feeds.push({ title: feed.title || i18next.t('noTitle'), link: url });
+      watchedState.feeds.push({
+        title: feed.title || i18next.t('noTitle'),
+        link: url,
+      });
       watchedState.posts.push(...posts);
 
       watchedState.form.error = null;
