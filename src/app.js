@@ -45,8 +45,9 @@ export default () => {
       <h2>${i18next.t('feeds')}</h2>
       <ul class="list-group mb-3">
         ${state.feeds.map((feed) => `
-          <li class="list-group-item">
-            <h3 class="h6">${feed.title}</h3>
+          <li class="list-group-item border-0 border-end-0">
+            <h3 class="h6 mb-1">${feed.title}</h3>
+            <p class="m-0 small text-black-50">${feed.description}</p>
           </li>
         `).join('')}
       </ul>
@@ -138,6 +139,7 @@ export default () => {
 
       watchedState.feeds.push({
         title: feed.title || i18next.t('noTitle'),
+        description: feed.description || '',
         link: url,
       });
 
