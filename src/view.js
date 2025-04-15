@@ -12,39 +12,21 @@ const renderError = (input, feedback, error) => {
 const createList = (items, createItem) => {
   if (items.length === 0) return null;
   const list = document.createElement('ul');
-  list.classList.add('list-group', 'border-0', 'rounded-0');
+  list.classList.add('list-group');
   items.forEach((item) => list.append(createItem(item)));
   return list;
 };
 
 const renderFeeds = (feedsContainer, feeds) => {
   const newContainer = feedsContainer.cloneNode(false);
-
-  const card = document.createElement('div');
-  card.classList.add('card', 'border-0');
-
-  const cardBody = document.createElement('div');
-  cardBody.classList.add('card-body');
-
-  const cardTitle = document.createElement('h2');
-  cardTitle.classList.add('card-title', 'h4');
-  cardTitle.textContent = i18next.t('feeds');
-
-  cardBody.appendChild(cardTitle);
-  card.appendChild(cardBody);
-
   const list = createList(feeds, ({ title, description }) => {
     const item = document.createElement('li');
-    item.classList.add('list-group-item', 'border-0', 'border-end-0');
-    item.innerHTML = `<h3 class="h6 m-0">${title}</h3><p class="m-0 small text-black-50">${description}</p>`;
+    item.classList.add('list-group-item');
+    item.innerHTML = `<h3>${title}</h3><p>${description}</p>`;
     return item;
   });
 
-  if (list) {
-    card.appendChild(list);
-    newContainer.appendChild(card);
-  }
-
+  if (list) newContainer.appendChild(list);
   feedsContainer.replaceWith(newContainer);
 };
 
@@ -65,49 +47,31 @@ export const showModal = (title, description, link) => {
 
 const renderPosts = (postsContainer, posts, readPosts) => {
   const newContainer = postsContainer.cloneNode(false);
-
-  const card = document.createElement('div');
-  card.classList.add('card', 'border-0');
-
-  const cardBody = document.createElement('div');
-  cardBody.classList.add('card-body');
-
-  const cardTitle = document.createElement('h2');
-  cardTitle.classList.add('card-title', 'h4');
-  cardTitle.textContent = i18next.t('posts');
-  cardBody.appendChild(cardTitle);
-  card.appendChild(cardBody);
-
   const list = createList(posts, ({ title, description, link }) => {
     const item = document.createElement('li');
-    item.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
+    item.classList.add('list-group-item', 'd-flex', 'justify-content-between');
 
     const postLink = document.createElement('a');
     postLink.href = link;
     postLink.textContent = title;
     postLink.target = '_blank';
-    postLink.classList.add(readPosts.has(link) ? 'fw-normal' : 'fw-bold');
+    postLink.classList.toggle('fw-bold', !readPosts.has(link));
 
     const previewBtn = document.createElement('button');
-    previewBtn.classList.add('btn', 'btn-outline-primary', 'btn-sm', 'preview-btn');
+    previewBtn.classList.add('btn', 'btn-link', 'preview-btn');
     previewBtn.textContent = i18next.t('preview');
 
     previewBtn.addEventListener('click', () => {
       showModal(title, description, link);
       readPosts.add(link);
       postLink.classList.remove('fw-bold');
-      postLink.classList.add('fw-normal');
     });
 
     item.append(postLink, previewBtn);
     return item;
   });
 
-  if (list) {
-    card.appendChild(list);
-    newContainer.appendChild(card);
-  }
-
+  if (list) newContainer.appendChild(list);
   postsContainer.replaceWith(newContainer);
 };
 
