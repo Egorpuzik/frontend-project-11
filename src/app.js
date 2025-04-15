@@ -5,6 +5,23 @@ import { initView, showModal, resetInputField } from './view.js';
 import parseRSS from './api/rssParser.js';
 import fetchRSS from './api/fetchRSS.js';
 
+const resources = {
+  ru: {
+    translation: {
+      preview: 'Предпросмотр',
+      rssExists: 'RSS уже существует',
+      noTitle: 'Без названия',
+      rssLoaded: 'RSS успешно загружен',
+      feeds: 'Фиды',
+      posts: 'Посты',
+      parseError: 'Ресурс не содержит валидный RSS',
+      networkError: 'Ошибка сети',
+      invalidUrl: 'Ссылка должна быть валидным URL',
+      required: 'Не должно быть пустым',
+    },
+  },
+};
+
 export default () => {
   const state = {
     form: { error: null },
@@ -82,26 +99,6 @@ export default () => {
     }
   });
 
-  i18next.init({
-    lng: 'ru',
-    resources: {
-      ru: {
-        translation: {
-          preview: 'Предпросмотр',
-          rssExists: 'RSS уже существует',
-          noTitle: 'Без названия',
-          rssLoaded: 'RSS успешно загружен',
-          feeds: 'Фиды',
-          posts: 'Посты',
-          parseError: 'Ресурс не содержит валидный RSS',
-          networkError: 'Ошибка сети',
-          invalidUrl: 'Ссылка должна быть валидным URL',
-          required: 'Не должно быть пустым',
-        },
-      },
-    },
-  });
-
   const updateFeeds = async () => {
     if (watchedState.feeds.length === 0) {
       setTimeout(updateFeeds, 5000);
@@ -117,7 +114,7 @@ export default () => {
         const freshPosts = newPosts.filter((post) => !existingLinks.has(post.link));
 
         if (freshPosts.length > 0) {
-          watchedState.posts.push(...freshPosts);
+          watchedState.posts.unshift(...freshPosts);
         }
       } catch (error) {
         renderFeedback(i18next.t('networkError'), 'error');
@@ -137,12 +134,13 @@ export default () => {
     try {
       const xml = await fetchRSS(url);
       const { feed, posts } = parseRSS(xml);
+
       watchedState.feeds.push({
         title: feed.title || i18next.t('noTitle'),
         link: url,
       });
 
-      watchedState.posts.push(...posts);
+      watchedState.posts.unshift(...posts);
       watchedState.form.error = null;
 
       renderFeedback(i18next.t('rssLoaded'));
@@ -157,8 +155,8 @@ export default () => {
     }
   };
 
-  const handleFormSubmit = (event) => {
-    event.preventDefault();
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
     const url = elements.input.value.trim();
 
     validateUrl(url, watchedState.feeds)
@@ -169,10 +167,10 @@ export default () => {
       });
   };
 
-  const handlePostClick = (event) => {
-    if (!event.target.classList.contains('preview-btn')) return;
+  const handlePostClick = (e) => {
+    if (!e.target.classList.contains('preview-btn')) return;
 
-    const { index } = event.target.dataset;
+    const { index } = e.target.dataset;
     const post = watchedState.posts[index];
 
     watchedState.readPosts.add(post.link);
@@ -183,8 +181,14 @@ export default () => {
     };
   };
 
-  elements.form.addEventListener('submit', handleFormSubmit);
-  elements.postsContainer.addEventListener('click', handlePostClick);
+  i18next.init({
+    lng: 'ru',
+    debug: false,
+    resources,
+  }).then(() => {
+    initView(state, elements);
 
-  initView(state, elements);
+    elements.form.addEventListener('submit', handleFormSubmit);
+    elements.postsContainer.addEventListener('click', handlePostClick);
+  });
 };

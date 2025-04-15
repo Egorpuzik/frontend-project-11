@@ -1,5 +1,6 @@
 import { Modal } from 'bootstrap';
 import onChange from 'on-change';
+import i18next from 'i18next';
 
 const renderError = (input, feedback, error) => {
   const feedbackElement = feedback.cloneNode(true);
@@ -46,7 +47,7 @@ export const showModal = (title, description, link) => {
 
 const renderPosts = (postsContainer, posts, readPosts) => {
   const newContainer = postsContainer.cloneNode(false);
-  const list = createList(posts, ({ title, link }) => {
+  const list = createList(posts, ({ title, description, link }) => {
     const item = document.createElement('li');
     item.classList.add('list-group-item', 'd-flex', 'justify-content-between');
 
@@ -58,10 +59,10 @@ const renderPosts = (postsContainer, posts, readPosts) => {
 
     const previewBtn = document.createElement('button');
     previewBtn.classList.add('btn', 'btn-link', 'preview-btn');
-    previewBtn.textContent = 'Предпросмотр';
+    previewBtn.textContent = i18next.t('preview');
 
     previewBtn.addEventListener('click', () => {
-      showModal(title, '', link);
+      showModal(title, description, link);
       readPosts.add(link);
       postLink.classList.remove('fw-bold');
     });
@@ -82,7 +83,15 @@ export const resetInputField = (input) => {
 };
 
 export const initView = (state, elements) => onChange(state, (path) => {
-  if (path === 'form.error') renderError(elements.input, elements.feedback, state.form.error);
-  if (path === 'feeds') renderFeeds(elements.feedsContainer, state.feeds);
-  if (path === 'posts' || path === 'readPosts') renderPosts(elements.postsContainer, state.posts, state.readPosts);
+  if (path === 'form.error') {
+    renderError(elements.input, elements.feedback, state.form.error);
+  }
+
+  if (path === 'feeds') {
+    renderFeeds(elements.feedsContainer, state.feeds);
+  }
+
+  if (path === 'posts' || path === 'readPosts') {
+    renderPosts(elements.postsContainer, state.posts, state.readPosts);
+  }
 });

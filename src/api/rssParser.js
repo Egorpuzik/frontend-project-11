@@ -3,7 +3,7 @@ const parseRSS = (xmlString) => {
   const xmlDoc = parser.parseFromString(xmlString, 'application/xml');
 
   if (xmlDoc.querySelector('parsererror')) {
-    throw new Error('Ошибка парсинга RSS');
+    throw new Error('ParseError');
   }
 
   const feed = {
